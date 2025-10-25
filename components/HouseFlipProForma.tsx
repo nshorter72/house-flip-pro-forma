@@ -84,7 +84,7 @@ const HouseFlipProForma = () => {
   ]);
 
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [activeRenovationTab, setActiveRenovationTab] = useState('summary');
+  const [activeRenovationTab, setActiveRenovationTab] = useState<string | number>('summary');
   const [savedProjects, setSavedProjects] = useState([]);
   const [currentProjectId, setCurrentProjectId] = useState(null);
   const [showProjectModal, setShowProjectModal] = useState(false);
