@@ -540,7 +540,7 @@ const HouseFlipProForma = () => {
                         );
                       })}
                       <tr className="bg-blue-100 font-bold">
-                        <td className="px-4 py-3" colSpan="3">Total</td>
+                        <td className="px-4 py-3" colSpan={3}>Total</td>
                         <td className="px-4 py-3 text-right">{formatCurrency(calculations.base.totalRenovation)}</td>
                       </tr>
                     </tbody>
