@@ -290,6 +290,196 @@ const HouseFlipProForma = () => {
     }));
   };
 
+  // Storage helpers that prefer window.storage but fall back to a single 'houseFlipProjects' array in localStorage
+  const storageSet = async (id: string, value: string) => {
+    if ((window as any).storage?.set) return (window as any).storage.set(id, value);
+
+    const raw = localStorage.getItem('houseFlipProjects') || '[]';
+    const projects = JSON.parse(raw);
+    let projectObj;
+    try {
+      projectObj = JSON.parse(value);
+    } catch {
+      // if value isn't JSON, wrap it
+      projectObj = { id, value };
+    }
+    const idx = projects.findIndex((p: any) => p.id === id);
+    if (idx >= 0) {
+      projects[idx] = projectObj;
+    } else {
+      projects.push(projectObj);
+    }
+    localStorage.setItem('houseFlipProjects', JSON.stringify(projects));
+  };
+
+  const storageGet = async (id: string) => {
+    if ((window as any).storage?.get) return (window as any).storage.get(id);
+
+    const raw = localStorage.getItem('houseFlipProjects') || '[]';
+    const projects = JSON.parse(raw);
+    const project = projects.find((p: any) => p.id === id);
+    return { value: project ? JSON.stringify(project) : null };
+  };
+
+  const storageList = async () => {
+    if ((window as any).storage?.list) return (window as any).storage.list('houseFlipProjects');
+    const raw = localStorage.getItem('houseFlipProjects') || '[]';
+    const projects = JSON.parse(raw);
+    const keys = projects.map((p: any) => p.id);
+    return { keys };
+  };
+
+  const storageRemove = async (id: string) => {
+    if ((window as any).storage?.remove) return (window as any).storage.remove(id);
+
+    const raw = localStorage.getItem('houseFlipProjects') || '[]';
+    let projects = JSON.parse(raw);
+    projects = projects.filter((p: any) => p.id !== id);
+    localStorage.setItem('houseFlipProjects', JSON.stringify(projects));
+  };
+
+  const generateId = () => `project_${Date.now()}`;
+
+  const refreshSavedProjects = async () => {
+    try {
+      const result = await storageList();
+      const projects = [];
+      for (const key of result.keys) {
+        try {
+          const data = await storageGet(key);
+          if (data && data.value) {
+            projects.push(JSON.parse(data.value));
+          }
+        } catch (e) {
+          console.log('Error loading project:', key);
+        }
+      }
+      setSavedProjects(projects);
+    } catch (e) {
+      console.log('No saved projects yet');
+    }
+  };
+
+  const saveProject = async () => {
+    try {
+      const id = currentProjectId || generateId();
+      const project = {
+        id,
+        projectName: inputs.projectName,
+        inputs,
+        renovationItems,
+        financingSources,
+        savedAt: new Date().toISOString()
+      };
+      await storageSet(id, JSON.stringify(project));
+      setCurrentProjectId(id);
+      await refreshSavedProjects();
+      alert('Project saved');
+    } catch (e) {
+      console.error(e);
+      alert('Save failed');
+    }
+  };
+
+  const saveProjectAs = async (name: string) => {
+    try {
+      setInputs(prev => ({ ...prev, projectName: name }));
+      const id = `project:${name.replace(/\s+/g,'-').toLowerCase()}:${Date.now()}`;
+      const project = {
+        id,
+        projectName: name,
+        inputs,
+        renovationItems,
+        financingSources,
+        savedAt: new Date().toISOString()
+      };
+      await storageSet(id, JSON.stringify(project));
+      setCurrentProjectId(id);
+      await refreshSavedProjects();
+      alert('Project saved as ' + name);
+    } catch (e) {
+      console.error(e);
+      alert('Save as failed');
+    }
+  };
+
+  const loadProject = async (id: string) => {
+    try {
+      const data = await storageGet(id);
+      if (data && data.value) {
+        const project = JSON.parse(data.value);
+        if (project.inputs) setInputs(project.inputs);
+        if (project.renovationItems) setRenovationItems(project.renovationItems);
+        if (project.financingSources) setFinancingSources(project.financingSources);
+        setCurrentProjectId(id);
+      } else {
+        alert('Project not found');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Load failed');
+    }
+  };
+
+  const deleteProject = async (id: string) => {
+    try {
+      await storageRemove(id);
+      await refreshSavedProjects();
+      setCurrentProjectId(null);
+      alert('Deleted');
+    } catch (e) {
+      console.error(e);
+      alert('Delete failed');
+    }
+  };
+
+  const exportProject = () => {
+    try {
+      const project = {
+        projectName: inputs.projectName,
+        inputs,
+        renovationItems,
+        financingSources,
+        exportedAt: new Date().toISOString()
+      };
+      const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${(inputs.projectName || 'project').replace(/\s+/g,'-')}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error(e);
+      alert('Export failed');
+    }
+  };
+
+  const handleImportFile = (e: any) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const content = ev.target?.result as string;
+        const project = JSON.parse(content);
+        if (project.inputs) setInputs(project.inputs);
+        if (project.renovationItems) setRenovationItems(project.renovationItems);
+        if (project.financingSources) setFinancingSources(project.financingSources);
+        // auto-save imported project
+        const id = `project:imported:${Date.now()}`;
+        await storageSet(id, JSON.stringify({ id, ...project, importedAt: new Date().toISOString() }));
+        await refreshSavedProjects();
+        setCurrentProjectId(id);
+        alert('Imported and saved');
+      } catch (err) {
+        console.error(err);
+        alert('Import failed');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
       <div className="max-w-7xl mx-auto">
