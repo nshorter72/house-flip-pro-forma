@@ -587,84 +587,8 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/supabase.min.js"></script>
     <script>
-        // Supabase client (project provided)
-        const SUPABASE_URL = 'https://fmbjhbbaltdsbrvbotip.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtYmpoYmJhbHRkc2JydmJvdGlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MzY1MTAsImV4cCI6MjA3NzAxMjUxMH0.rQyj_WkoLj0JGMeSfx2o4xBLuNQQOA8e9sYTmITmOpk';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // Cloud sync helpers
-        async function supabaseSaveCurrentProject() {
-            try {
-                const projectId = data.currentProjectId || 'project_' + Date.now();
-                const projectData = {
-                    id: projectId,
-                    name: document.getElementById('projectName').value,
-                    savedAt: new Date().toISOString(),
-                    inputs: {
-                        projectName: document.getElementById('projectName').value,
-                        purchasePrice: parseFloat(document.getElementById('purchasePrice').value),
-                        arvPrice: parseFloat(document.getElementById('arvPrice').value),
-                        holdPeriod: parseFloat(document.getElementById('holdPeriod').value),
-                        closingCosts: parseFloat(document.getElementById('closingCosts').value),
-                        saleClosingPct: parseFloat(document.getElementById('saleClosingPct').value),
-                        propertyTaxes: parseFloat(document.getElementById('propertyTaxes').value),
-                        insurance: parseFloat(document.getElementById('insurance').value),
-                        utilities: parseFloat(document.getElementById('utilities').value),
-                        hoa: parseFloat(document.getElementById('hoa').value),
-                        contingency: parseFloat(document.getElementById('contingency').value)
-                    },
-                    renovationItems: data.renovationItems,
-                    financingSources: data.financingSources
-                };
-
-                const payload = {
-                    id: projectData.id,
-                    name: projectData.name,
-                    savedAt: projectData.savedAt,
-                    data: projectData
-                };
-
-                const { error } = await supabaseClient.from('projects').upsert(payload, { onConflict: 'id' });
-                if (error) throw error;
-
-                // also save locally so UI stays in sync
-                let projects = JSON.parse(localStorage.getItem('houseFlipProjects') || '[]');
-                const idx = projects.findIndex(p => p.id === projectData.id);
-                if (idx >= 0) projects[idx] = projectData; else projects.push(projectData);
-                localStorage.setItem('houseFlipProjects', JSON.stringify(projects));
-                data.currentProjectId = projectData.id;
-
-                document.getElementById('saveStatus').textContent = '● Saved (Cloud)';
-                document.getElementById('saveStatus').style.color = '#10b981';
-                loadProjectList();
-                alert('Project saved to Supabase successfully.');
-            } catch (err) {
-                console.error(err);
-                alert('Cloud save failed: ' + (err.message || JSON.stringify(err)));
-            }
-        }
-
-        async function supabaseLoadProjects() {
-            try {
-                const { data: rows, error } = await supabaseClient.from('projects').select('data').order('savedAt', { ascending: false }).limit(100);
-                if (error) throw error;
-                const projects = (rows || []).map(r => r.data);
-                if (projects.length === 0) {
-                    alert('No projects found in Supabase.');
-                    return;
-                }
-                // Merge into localStorage (overwrite local projects for simplicity)
-                localStorage.setItem('houseFlipProjects', JSON.stringify(projects));
-                loadProjectList();
-                alert('Loaded ' + projects.length + ' project(s) from Supabase. Open Projects modal to load one.');
-            } catch (err) {
-                console.error(err);
-                alert('Cloud load failed: ' + (err.message || JSON.stringify(err)));
-            }
-        }
-
+        // Supabase helpers deferred — moved to a deferred loader at the end of the file
         // Data structure
         let data = {
             currentProjectId: null,
@@ -1097,6 +1021,105 @@
 
         // Initialize
         calculate();
+    </script>
+
+    <!-- Load Supabase UMD and attach cloud helpers after page scripts to avoid initialization errors -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+    (function() {
+        const SUPABASE_URL = 'https://fmbjhbbaltdsbrvbotip.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtYmpoYmJhbHRkc2JydmJvdGlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MzY1MTAsImV4cCI6MjA3NzAxMjUxMH0.rQyj_WkoLj0JGMeSfx2o4xBLuNQQOA8e9sYTmITmOpk';
+
+        function createSupabaseClient() {
+            if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
+                console.warn('Supabase library not available; cloud functions disabled.');
+                return null;
+            }
+            try {
+                return window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            } catch (e) {
+                console.error('Failed to create Supabase client', e);
+                return null;
+            }
+        }
+
+        const client = createSupabaseClient();
+        if (!client) {
+            // define no-op functions so buttons won't throw
+            window.supabaseSaveCurrentProject = async function() { alert('Cloud save not available (Supabase client failed to load).'); };
+            window.supabaseLoadProjects = async function() { alert('Cloud load not available (Supabase client failed to load).'); };
+            return;
+        }
+
+        // attach helpers
+        window.supabaseSaveCurrentProject = async function() {
+            try {
+                const projectId = data.currentProjectId || 'project_' + Date.now();
+                const projectData = {
+                    id: projectId,
+                    name: document.getElementById('projectName').value,
+                    savedAt: new Date().toISOString(),
+                    inputs: {
+                        projectName: document.getElementById('projectName').value,
+                        purchasePrice: parseFloat(document.getElementById('purchasePrice').value),
+                        arvPrice: parseFloat(document.getElementById('arvPrice').value),
+                        holdPeriod: parseFloat(document.getElementById('holdPeriod').value),
+                        closingCosts: parseFloat(document.getElementById('closingCosts').value),
+                        saleClosingPct: parseFloat(document.getElementById('saleClosingPct').value),
+                        propertyTaxes: parseFloat(document.getElementById('propertyTaxes').value),
+                        insurance: parseFloat(document.getElementById('insurance').value),
+                        utilities: parseFloat(document.getElementById('utilities').value),
+                        hoa: parseFloat(document.getElementById('hoa').value),
+                        contingency: parseFloat(document.getElementById('contingency').value)
+                    },
+                    renovationItems: data.renovationItems,
+                    financingSources: data.financingSources
+                };
+
+                const payload = {
+                    id: projectData.id,
+                    name: projectData.name,
+                    savedAt: projectData.savedAt,
+                    data: projectData
+                };
+
+                const { error } = await client.from('projects').upsert(payload, { onConflict: 'id' });
+                if (error) throw error;
+
+                let projects = JSON.parse(localStorage.getItem('houseFlipProjects') || '[]');
+                const idx = projects.findIndex(p => p.id === projectData.id);
+                if (idx >= 0) projects[idx] = projectData; else projects.push(projectData);
+                localStorage.setItem('houseFlipProjects', JSON.stringify(projects));
+                data.currentProjectId = projectData.id;
+
+                document.getElementById('saveStatus').textContent = '● Saved (Cloud)';
+                document.getElementById('saveStatus').style.color = '#10b981';
+                loadProjectList();
+                alert('Project saved to Supabase successfully.');
+            } catch (err) {
+                console.error(err);
+                alert('Cloud save failed: ' + (err.message || JSON.stringify(err)));
+            }
+        };
+
+        window.supabaseLoadProjects = async function() {
+            try {
+                const { data: rows, error } = await client.from('projects').select('data').order('savedAt', { ascending: false }).limit(100);
+                if (error) throw error;
+                const projects = (rows || []).map(r => r.data);
+                if (projects.length === 0) {
+                    alert('No projects found in Supabase.');
+                    return;
+                }
+                localStorage.setItem('houseFlipProjects', JSON.stringify(projects));
+                loadProjectList();
+                alert('Loaded ' + projects.length + ' project(s) from Supabase. Open Projects modal to load one.');
+            } catch (err) {
+                console.error(err);
+                alert('Cloud load failed: ' + (err.message || JSON.stringify(err)));
+            }
+        };
+    })();
     </script>
 </body>
 </html>
