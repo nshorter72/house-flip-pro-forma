@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Flip Pro Forma</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            color: #1a202c;
+        }
+
+        .header p {
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .tabs {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 16px 24px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-size: 16px;
+            font-weight: 500;
+            color: #718096;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            color: #1a202c;
+        }
+
+        .tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+
+        .content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 24px;
+            color: white;
+        }
+
+        .metric-card.blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+        .metric-card.green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .metric-card.orange { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .metric-card.purple { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+
+        .metric-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .metric-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 8px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .form-section h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #1a202c;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .summary-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .summary-table td:first-child {
+            color: #6b7280;
+        }
+
+        .summary-table td:last-child {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .summary-table tr.highlight {
+            background: #f0fdf4;
+        }
+
+        .summary-table tr.highlight td {
+            font-weight: bold;
+            color: #059669;
+        }
+
+        .renovation-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .renovation-tab {
+            padding: 10px 20px;
+            border: none;
+            background: #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .renovation-tab.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .material-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .material-item input {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+        }
+
+        .material-item input:first-child {
+            flex: 1;
+        }
+
+        .material-item input:nth-child(2) {
+            width: 150px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .project-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .project-item.current {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .project-info h4 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .project-info p {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th,
+        table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        table th {
+            background: #f9fafb;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        table td {
+            font-size: 14px;
+        }
+
+        .text-right {
+            text-align: right !important;
+        }
+
+        .financing-source {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .financing-source.enabled {
+            background: #eff6ff;
+            border-color: #3b82f6;
+        }
+
+        .financing-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .financing-header input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+
+        .financing-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .total-box {
+            background: #dbeafe;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .total-box h4 {
+            font-size: 14px;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        .total-box .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1 id="projectTitle">House Flip Pro Forma</h1>
+                <p>Enhanced Real Estate Analysis Tool <span id="saveStatus"></span></p>
+            </div>
+            <button class="btn-primary" onclick="showProjectModal()">
+                📁 Projects
+            </button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+            <button class="tab" onclick="switchTab('inputs')">⚙️ Inputs</button>
+            <button class="tab" onclick="switchTab('renovation')">🔨 Renovation</button>
+            <button class="tab" onclick="switchTab('financing')">💰 Financing</button>
+        </div>
+
+        <div id="dashboard" class="content">
+            <div class="metrics-grid">
+                <div class="metric-card blue">
+                    <div class="metric-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="vertical-align:middle; margin-right:8px" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v18" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 12h14" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Net Profit</div>
+                    <div class="metric-value" id="netProfit">$0</div>
+                    <div class="metric-subtitle" id="roiPercent">0% ROI</div>
+                </div>
+                <div class="metric-card green">
+                    <div class="metric-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="vertical-align:middle; margin-right:8px" xmlns="http://www.w3.org/2000/svg"><path d="M3 17l6-6 4 4 8-8" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>IRR</div>
+                    <div class="metric-value" id="irrPercent">0%</div>
+                    <div class="metric-subtitle">Annualized Return</div>
+                </div>
+                <div class="metric-card orange">
+                    <div class="metric-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="vertical-align:middle; margin-right:8px" xmlns="http://www.w3.org/2000/svg"><path d="M3 12h18" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 8v8" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Equity Required</div>
+                    <div class="metric-value" id="totalEquity">$0</div>
+                    <div class="metric-subtitle">Your Investment</div>
+                </div>
+                <div class="metric-card purple">
+                    <div class="metric-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="vertical-align:middle; margin-right:8px" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/><path d="M8 2v4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 2v4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Timeline</div>
+                    <div class="metric-value" id="timelineWeeks">0</div>
+                    <div class="metric-subtitle" id="timelineMonths">0 months</div>
+                </div>
+            </div>
+
+            <div style="margin:18px 0;">
+                <svg width="100%" height="80" viewBox="0 0 400 80" preserveAspectRatio="none" aria-hidden="true">
+                    <polyline points="0,66 40,60 80,48 120,40 160,44 200,32 240,28 280,20 320,24 360,16 400,12" fill="none" stroke="#60a5fa" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <rect x="0" y="70" width="400" height="6" fill="#dbeafe" />
+                </svg>
+            </div>
+
+            <div class="form-section">
+                <h3>Project Summary</h3>
+                <table class="summary-table">
+                    <tr>
+                        <td>Purchase Price:</td>
+                        <td id="summaryPurchase">$0</td>
+                    </tr>
+                    <tr>
+                        <td>Total Renovation:</td>
+                        <td id="summaryRenovation">$0</td>
+                    </tr>
+                    <tr>
+                        <td>Holding Costs:</td>
+                        <td id="summaryHolding">$0</td>
+                    </tr>
+                    <tr>
+                        <td>Financing Costs:</td>
+                        <td id="summaryFinancing">$0</td>
+                    </tr>
+                    <tr>
+                        <td>Total Project Cost:</td>
+                        <td id="summaryTotal">$0</td>
+                    </tr>
+                    <tr>
+                        <td>ARV (Sale Price):</td>
+                        <td id="summaryARV">$0</td>
+                    </tr>
+                    <tr class="highlight">
+                        <td>Net Profit:</td>
+                        <td id="summaryProfit">$0</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div id="inputs" class="content" style="display: none;">
+            <div class="input-grid">
+                <div class="form-section">
+                    <h3>Property Details</h3>
+                    <div class="form-group">
+                        <label>Project Name</label>
+                        <input type="text" id="projectName" value="New Project" onchange="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label>Purchase Price ($)</label>
+                        <input type="number" id="purchasePrice" value="432910" onchange="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label>ARV - After Repair Value ($)</label>
+                        <input type="number" id="arvPrice" value="600000" onchange="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label>Hold Period (Weeks)</label>
+                        <input type="number" id="holdPeriodWeeks" value="36" onchange="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label>Purchase Closing Costs ($)</label>
+                        <input type="number" id="purchaseClosingCosts" value="4329" onchange="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label>Sale Closing Costs (%)</label>
+                        <input type="number" step="0.1" id="saleClosingCostsPct" value="6" onchange="calculate()">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Holding Costs</h3>
+                    <div class="form-group">
+                        <label>Property Taxes (Annual $)</label>
+                        <input type="number" id="propertyTaxesAnnual" value="4500" onchange="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label>Insurance (Annual $)</label>
+                        <input type="number" id="insuranceAnnual" value="4500" onchange="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label>Utilities (Monthly $)</label>
+                        <input type="number" id="utilitiesMonthly" value="200" onchange="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label>HOA (Monthly $)</label>
+                        <input type="number" id="hoaMonthly" value="0" onchange="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label>Contingency (%)</label>
+                        <input type="number" id="contingencyPct" value="10" onchange="calculate()">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="renovation" class="content" style="display: none;">
+            <div class="renovation-tabs" id="renovationTabs"></div>
+            <div id="renovationContent"></div>
+        </div>
+
+        <div id="financing" class="content" style="display: none;">
+            <button class="btn-success" onclick="addFinancingSource()" style="margin-bottom: 20px;">
+                ➕ Add Financing Source
+            </button>
+            <div id="financingSources"></div>
+            <div class="total-box">
+                <h4>Total Loan Amount</h4>
+                <div class="value" id="totalLoans">$0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Projects</h2>
+                <button onclick="closeProjectModal()" style="border: none; background: none; font-size: 24px; cursor: pointer;">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn-success" onclick="createNewProject()">➕ New Project</button>
+                    <button class="btn-primary" onclick="saveCurrentProject()">💾 Save Current</button>
+                    <button class="btn-primary" onclick="supabaseSaveCurrentProject()">☁️ Save to Cloud</button>
+                    <button class="btn-primary" onclick="supabaseLoadProjects()">☁️ Load from Cloud</button>
+                </div>
+                <div id="projectList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase helpers deferred — moved to a deferred loader at the end of the file
+        // Data structure
+        let data = {
+            currentProjectId: null,
+            inputs: {
+                projectName: 'New Project',
+                purchasePrice: 432910,
+                arvPrice: 600000,
+                holdPeriod: 36,
+                closingCosts: 4329,
+                saleClosingPct: 6,
+                propertyTaxes: 4500,
+                insurance: 4500,
+                utilities: 200,
+                hoa: 0,
+                contingency: 10
+            },
+            renovationItems: [
+                { id: 1, category: 'Flooring', materials: [{ name: 'Tiles', cost: 3500 }], labor: 5300 },
+                { id: 2, category: 'Paint', materials: [{ name: 'Paint', cost: 2800 }], labor: 4200 },
+                { id: 3, category: 'Kitchen', materials: [{ name: 'Cabinets', cost: 6500 }], labor: 1700 },
+                { id: 4, category: 'Bathroom', materials: [{ name: 'Vanity', cost: 1200 }], labor: 800 }
+            ],
+            financingSources: [
+                { id: 1, name: 'Senior Mortgage', type: 'ltv', ltvPct: 75, fixedAmount: 0, interestRate: 7.5, originationPct: 1, enabled: true },
+                { id: 2, name: 'Hard Money', type: 'fixed', ltvPct: 0, fixedAmount: 40000, interestRate: 12, originationPct: 2, enabled: true }
+            ],
+            activeTab: 'dashboard',
+            activeRenovationTab: 'summary'
+        };
+
+        // Format currency
+        function fmt(value) {
+            return '$' + Math.round(value).toLocaleString();
+        }
+
+        // Calculate everything
+        function calculate() {
+            // Get inputs
+            const inputs = {
+                purchasePrice: parseFloat(document.getElementById('purchasePrice').value) || 0,
+                arvPrice: parseFloat(document.getElementById('arvPrice').value) || 0,
+                holdPeriodWeeks: parseFloat(document.getElementById('holdPeriodWeeks').value) || 0,
+                purchaseClosingCosts: parseFloat(document.getElementById('purchaseClosingCosts').value) || 0,
+                saleClosingCostsPct: parseFloat(document.getElementById('saleClosingCostsPct').value) || 0,
+                propertyTaxesAnnual: parseFloat(document.getElementById('propertyTaxesAnnual').value) || 0,
+                insuranceAnnual: parseFloat(document.getElementById('insuranceAnnual').value) || 0,
+                utilitiesMonthly: parseFloat(document.getElementById('utilitiesMonthly').value) || 0,
+                hoaMonthly: parseFloat(document.getElementById('hoaMonthly').value) || 0,
+                contingencyPct: parseFloat(document.getElementById('contingencyPct').value) || 0
+            };
+
+            // Calculate renovation
+            let baseRenovation = 0;
+            data.renovationItems.forEach(item => {
+                item.materials.forEach(m => baseRenovation += m.cost);
+                baseRenovation += item.labor;
+            });
+            const contingencyAmt = baseRenovation * (inputs.contingencyPct / 100);
+            const totalRenovation = baseRenovation + contingencyAmt;
+
+            // Calculate holding costs
+            const holdMonths = inputs.holdPeriodWeeks / 4.33;
+            const propertyTaxesCost = (inputs.propertyTaxesAnnual / 12) * holdMonths;
+            const insuranceCost = (inputs.insuranceAnnual / 12) * holdMonths;
+            const utilitiesCost = inputs.utilitiesMonthly * holdMonths;
+            const hoaCost = inputs.hoaMonthly * holdMonths;
+            const totalHolding = propertyTaxesCost + insuranceCost + utilitiesCost + hoaCost;
+
+            // Calculate financing
+            let totalLoanAmount = 0;
+            let totalFinancingCosts = 0;
+            data.financingSources.filter(s => s.enabled).forEach(source => {
+                let loanAmt = source.type === 'ltv' ? 
+                    inputs.purchasePrice * (source.ltvPct / 100) : 
+                    source.fixedAmount;
+                const origination = loanAmt * (source.originationPct / 100);
+                const interest = loanAmt * (source.interestRate / 100) * (holdMonths / 12);
+                totalLoanAmount += loanAmt;
+                totalFinancingCosts += origination + interest;
+            });
+
+            // Total costs
+            const totalCosts = inputs.purchasePrice + inputs.purchaseClosingCosts + totalRenovation + totalHolding + totalFinancingCosts;
+
+            // Sale proceeds
+            const saleClosingCosts = inputs.arvPrice * (inputs.saleClosingCostsPct / 100);
+            const netSaleProceeds = inputs.arvPrice - saleClosingCosts;
+
+            // Profit and returns
+            const netProfit = netSaleProceeds - totalCosts;
+            const totalEquity = totalCosts - totalLoanAmount;
+            // Guard against division by zero / invalid numbers
+            const roi = (totalEquity !== 0 && isFinite(totalEquity)) ? (netProfit / totalEquity) * 100 : 0;
+            const years = holdMonths / 12;
+            const irr = (years > 0 && isFinite(roi)) ? ((Math.pow(1 + (roi / 100), 1 / years) - 1) * 100) : 0;
+
+            // Update dashboard
+            document.getElementById('netProfit').textContent = fmt(netProfit);
+            document.getElementById('roiPercent').textContent = roi.toFixed(1) + '% ROI';
+            document.getElementById('irrPercent').textContent = irr.toFixed(1) + '%';
+            document.getElementById('totalEquity').textContent = fmt(totalEquity);
+            document.getElementById('timelineWeeks').textContent = inputs.holdPeriodWeeks;
+            document.getElementById('timelineMonths').textContent = holdMonths.toFixed(1) + ' months';
+
+            // Update summary
+            document.getElementById('summaryPurchase').textContent = fmt(inputs.purchasePrice);
+            document.getElementById('summaryRenovation').textContent = fmt(totalRenovation);
+            document.getElementById('summaryHolding').textContent = fmt(totalHolding);
+            document.getElementById('summaryFinancing').textContent = fmt(totalFinancingCosts);
+            document.getElementById('summaryTotal').textContent = fmt(totalCosts);
+            document.getElementById('summaryARV').textContent = fmt(inputs.arvPrice);
+            document.getElementById('summaryProfit').textContent = fmt(netProfit);
+            document.getElementById('totalLoans').textContent = fmt(totalLoanAmount);
+
+            // Update title
+            const projectName = document.getElementById('projectName').value;
+            document.getElementById('projectTitle').textContent = projectName;
+        }
+
+        // Switch tabs
+        function switchTab(tab, evt) {
+            // remove active from all tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            // prefer explicit event target if provided
+            if (evt && evt.currentTarget) {
+                evt.currentTarget.classList.add('active');
+            } else if (typeof event !== 'undefined' && event && event.target) {
+                // inline handlers sometimes expose global `event`
+                event.target.classList.add('active');
+            } else {
+                // fallback: try to find the button by its onclick attribute
+                const btn = Array.from(document.querySelectorAll('.tab')).find(b => {
+                    return b.getAttribute('onclick') && b.getAttribute('onclick').includes(`switchTab('${tab}')`);
+                });
+                if (btn) btn.classList.add('active');
+            }
+            
+            document.querySelectorAll('.content').forEach(c => c.style.display = 'none');
+            const dest = document.getElementById(tab);
+            if (dest) dest.style.display = 'block';
+            
+            if (tab === 'renovation') renderRenovation();
+            if (tab === 'financing') renderFinancing();
+        }
+
+        // Renovation rendering
+        function renderRenovation() {
+            const tabsDiv = document.getElementById('renovationTabs');
+            tabsDiv.innerHTML = '<button class="renovation-tab active" data-renovation-id="summary" onclick="showRenovationTab(\'summary\')">Summary</button>';
+            data.renovationItems.forEach(item => {
+                tabsDiv.innerHTML += `<button class="renovation-tab" data-renovation-id="${item.id}" onclick="showRenovationTab(${item.id})">${item.category}</button>`;
+            });
+            showRenovationTab('summary');
+        }
+
+        function showRenovationTab(id) {
+            // clear active
+            document.querySelectorAll('.renovation-tab').forEach(t => t.classList.remove('active'));
+            // mark the correct tab active (lookup by data attribute)
+            const activeBtn = document.querySelector(`.renovation-tab[data-renovation-id="${id}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            const contentDiv = document.getElementById('renovationContent');
+            
+            if (id === 'summary') {
+                let html = '<table><thead><tr><th>Category</th><th class="text-right">Materials</th><th class="text-right">Labor</th><th class="text-right">Total</th></tr></thead><tbody>';
+                data.renovationItems.forEach(item => {
+                    const matTotal = item.materials.reduce((sum, m) => sum + m.cost, 0);
+                    const total = matTotal + item.labor;
+                    html += `<tr><td>${item.category}</td><td class="text-right">${fmt(matTotal)}</td><td class="text-right">${fmt(item.labor)}</td><td class="text-right">${fmt(total)}</td></tr>`;
+                });
+                html += '</tbody></table>';
+                contentDiv.innerHTML = html;
+            } else {
+                const item = data.renovationItems.find(i => i.id === id);
+                let html = `<h3>${item.category}</h3>`;
+                html += '<h4 style="margin: 20px 0 10px 0;">Materials</h4>';
+                item.materials.forEach((mat, idx) => {
+                    html += `<div class="material-item">
+                        <input type="text" value="${mat.name}" onchange="updateMaterial(${id}, ${idx}, 'name', this.value)">
+                        <input type="number" value="${mat.cost}" onchange="updateMaterial(${id}, ${idx}, 'cost', this.value)">
+                        <button class="btn-danger" onclick="removeMaterialFromItem(${id}, ${idx})">Remove</button>
+                    </div>`;
+                });
+                html += `<div style="margin-top:10px;"><button class="btn-success" onclick="addMaterialToItem(${id})">Add Material</button></div>`;
+                html += `<h4 style="margin: 20px 0 10px 0;">Labor</h4>`;
+                html += `<input type="number" value="${item.labor}" onchange="updateLabor(${id}, this.value)" style="width: 200px; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">`;
+                contentDiv.innerHTML = html;
+            }
+        }
+
+        function updateMaterial(itemId, matIdx, field, value) {
+            const item = data.renovationItems.find(i => i.id === itemId);
+            if (field === 'name') {
+                item.materials[matIdx].name = value;
+            } else {
+                item.materials[matIdx].cost = parseFloat(value) || 0;
+            }
+            calculate();
+        }
+
+        function updateLabor(itemId, value) {
+            const item = data.renovationItems.find(i => i.id === itemId);
+            item.labor = parseFloat(value) || 0;
+            calculate();
+        }
+
+        function addMaterialToItem(itemId) {
+            const item = data.renovationItems.find(i => i.id === itemId);
+            if (!item) return;
+            item.materials.push({ name: 'New Material', cost: 0 });
+            // if currently viewing this item's tab, re-render it
+            try { showRenovationTab(itemId); } catch (e) {}
+            calculate();
+        }
+
+        function removeMaterialFromItem(itemId, matIdx) {
+            const item = data.renovationItems.find(i => i.id === itemId);
+            if (!item) return;
+            if (item.materials.length <= 1) {
+                alert('At least one material is required.');
+                return;
+            }
+            item.materials.splice(matIdx, 1);
+            try { showRenovationTab(itemId); } catch (e) {}
+            calculate();
+        }
+
+        // Financing rendering
+        function renderFinancing() {
+            const div = document.getElementById('financingSources');
+            div.innerHTML = '';
+            data.financingSources.forEach(source => {
+                const enabled = source.enabled ? 'enabled' : '';
+                let html = `<div class="financing-source ${enabled}">
+                    <div class="financing-header">
+                        <input type="checkbox" ${source.enabled ? 'checked' : ''} onchange="toggleFinancing(${source.id})">
+                        <input type="text" value="${source.name}" onchange="updateFinancingName(${source.id}, this.value)" style="border: none; font-weight: bold; background: transparent;">
+                    </div>`;
+                if (source.enabled) {
+                    html += `<div class="financing-details">
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select onchange="updateFinancingType(${source.id}, this.value)">
+                                <option value="ltv" ${source.type === 'ltv' ? 'selected' : ''}>LTV %</option>
+                                <option value="fixed" ${source.type === 'fixed' ? 'selected' : ''}>Fixed Amount</option>
+                            </select>
+                        </div>`;
+                    if (source.type === 'ltv') {
+                        html += `<div class="form-group">
+                            <label>LTV %</label>
+                            <input type="number" value="${source.ltvPct}" onchange="updateFinancingField(${source.id}, 'ltvPct', this.value)">
+                        </div>`;
+                    } else {
+                        html += `<div class="form-group">
+                            <label>Amount ($)</label>
+                            <input type="number" value="${source.fixedAmount}" onchange="updateFinancingField(${source.id}, 'fixedAmount', this.value)">
+                        </div>`;
+                    }
+                    html += `<div class="form-group">
+                            <label>Interest Rate %</label>
+                            <input type="number" step="0.1" value="${source.interestRate}" onchange="updateFinancingField(${source.id}, 'interestRate', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Origination %</label>
+                            <input type="number" step="0.1" value="${source.originationPct}" onchange="updateFinancingField(${source.id}, 'originationPct', this.value)">
+                        </div>
+                    </div>`;
+                }
+                html += '</div>';
+                div.innerHTML += html;
+            });
+        }
+
+        function toggleFinancing(id) {
+            const source = data.financingSources.find(s => s.id === id);
+            source.enabled = !source.enabled;
+            renderFinancing();
+            calculate();
+        }
+
+        function updateFinancingName(id, value) {
+            const source = data.financingSources.find(s => s.id === id);
+            source.name = value;
+        }
+
+        function updateFinancingType(id, value) {
+            const source = data.financingSources.find(s => s.id === id);
+            source.type = value;
+            renderFinancing();
+            calculate();
+        }
+
+        function updateFinancingField(id, field, value) {
+            const source = data.financingSources.find(s => s.id === id);
+            source[field] = parseFloat(value) || 0;
+            calculate();
+        }
+
+        function addFinancingSource() {
+            const newId = Math.max(...data.financingSources.map(s => s.id)) + 1;
+            data.financingSources.push({
+                id: newId,
+                name: 'New Financing',
+                type: 'fixed',
+                ltvPct: 0,
+                fixedAmount: 0,
+                interestRate: 8,
+                originationPct: 1,
+                enabled: true
+            });
+            renderFinancing();
+            calculate();
+        }
+
+        // Project Management
+        function showProjectModal() {
+            document.getElementById('projectModal').classList.add('show');
+            loadProjectList();
+        }
+
+        function closeProjectModal() {
+            document.getElementById('projectModal').classList.remove('show');
+        }
+
+        function loadProjectList() {
+            const projects = JSON.parse(localStorage.getItem('houseFlipProjects') || '[]');
+            const listDiv = document.getElementById('projectList');
+            
+            if (projects.length === 0) {
+                listDiv.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 40px;'>No saved projects yet. Create a new project or save your current work.</p>';
+                return;
+            }
+
+            listDiv.innerHTML = '';
+            projects.forEach(project => {
+                const current = project.id === data.currentProjectId ? 'current' : '';
+                listDiv.innerHTML += `
+                    <div class="project-item ${current}">
+                        <div class="project-info">
+                            <h4>${project.name}</h4>
+                            <p>Purchase: ${fmt(project.inputs.purchasePrice)} | ARV: ${fmt(project.inputs.arvPrice)}</p>
+                            <p style="font-size: 12px; color: #9ca3af;">Saved: ${new Date(project.savedAt).toLocaleString()}</p>
+                        </div>
+                        <div class="project-actions">
+                            <button class="btn-primary" onclick="loadProject('${project.id}')">Load</button>
+                            <button class="btn-danger" onclick="deleteProject('${project.id}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function saveCurrentProject() {
+            const projectId = data.currentProjectId || 'project_' + Date.now();
+                const projectData = {
+                    id: projectId,
+                    name: document.getElementById('projectName').value,
+                    savedAt: new Date().toISOString(),
+                    inputs: {
+                        projectName: document.getElementById('projectName').value,
+                        purchasePrice: parseFloat(document.getElementById('purchasePrice').value),
+                        arvPrice: parseFloat(document.getElementById('arvPrice').value),
+                        holdPeriodWeeks: parseFloat(document.getElementById('holdPeriodWeeks').value),
+                        purchaseClosingCosts: parseFloat(document.getElementById('purchaseClosingCosts').value),
+                        saleClosingCostsPct: parseFloat(document.getElementById('saleClosingCostsPct').value),
+                        propertyTaxesAnnual: parseFloat(document.getElementById('propertyTaxesAnnual').value),
+                        insuranceAnnual: parseFloat(document.getElementById('insuranceAnnual').value),
+                        utilitiesMonthly: parseFloat(document.getElementById('utilitiesMonthly').value),
+                        hoaMonthly: parseFloat(document.getElementById('hoaMonthly').value),
+                        contingencyPct: parseFloat(document.getElementById('contingencyPct').value)
+                    },
+                    renovationItems: data.renovationItems,
+                    financingSources: data.financingSources
+                };
+
+            let projects = JSON.parse(localStorage.getItem('houseFlipProjects') || '[]');
+            const existingIndex = projects.findIndex(p => p.id === projectId);
+            
+            if (existingIndex >= 0) {
+                projects[existingIndex] = projectData;
+            } else {
+                projects.push(projectData);
+            }
+
+            localStorage.setItem('houseFlipProjects', JSON.stringify(projects));
+            data.currentProjectId = projectId;
+            document.getElementById('saveStatus').textContent = '● Saved';
+            document.getElementById('saveStatus').style.color = '#10b981';
+            
+            alert('Project saved successfully!');
+            loadProjectList();
+        }
+
+        function loadProject(projectId) {
+            const projects = JSON.parse(localStorage.getItem('houseFlipProjects') || '[]');
+            const project = projects.find(p => p.id === projectId);
+            
+            if (!project) return;
+
+            // Load inputs
+                document.getElementById('projectName').value = project.inputs.projectName;
+                document.getElementById('purchasePrice').value = project.inputs.purchasePrice;
+                document.getElementById('arvPrice').value = project.inputs.arvPrice;
+                document.getElementById('holdPeriodWeeks').value = project.inputs.holdPeriodWeeks;
+                document.getElementById('purchaseClosingCosts').value = project.inputs.purchaseClosingCosts;
+                document.getElementById('saleClosingCostsPct').value = project.inputs.saleClosingCostsPct;
+                document.getElementById('propertyTaxesAnnual').value = project.inputs.propertyTaxesAnnual;
+                document.getElementById('insuranceAnnual').value = project.inputs.insuranceAnnual;
+                document.getElementById('utilitiesMonthly').value = project.inputs.utilitiesMonthly;
+                document.getElementById('hoaMonthly').value = project.inputs.hoaMonthly;
+                document.getElementById('contingencyPct').value = project.inputs.contingencyPct;
+
+            // Load other data
+            data.renovationItems = project.renovationItems;
+            data.financingSources = project.financingSources;
+            data.currentProjectId = project.id;
+
+            document.getElementById('saveStatus').textContent = '● Saved';
+            document.getElementById('saveStatus').style.color = '#10b981';
+
+            closeProjectModal();
+            calculate();
+            alert('Project loaded successfully!');
+        }
+
+        function deleteProject(projectId) {
+            if (!confirm('Are you sure you want to delete this project?')) return;
+
+            let projects = JSON.parse(localStorage.getItem('houseFlipProjects') || '[]');
+            projects = projects.filter(p => p.id !== projectId);
+            localStorage.setItem('houseFlipProjects', JSON.stringify(projects));
+
+            if (data.currentProjectId === projectId) {
+                data.currentProjectId = null;
+                document.getElementById('saveStatus').textContent = '';
+            }
+
+            loadProjectList();
+        }
+
+        function createNewProject() {
+            if (confirm('Create a new project? Any unsaved changes will be lost.')) {
+                // Reset inputs
+                document.getElementById('projectName').value = 'New Project';
+                document.getElementById('purchasePrice').value = 0;
+                document.getElementById('arvPrice').value = 0;
+                document.getElementById('holdPeriodWeeks').value = 36;
+                document.getElementById('purchaseClosingCosts').value = 0;
+                document.getElementById('saleClosingCostsPct').value = 6;
+                document.getElementById('propertyTaxesAnnual').value = 0;
+                document.getElementById('insuranceAnnual').value = 0;
+                document.getElementById('utilitiesMonthly').value = 0;
+                document.getElementById('hoaMonthly').value = 0;
+                document.getElementById('contingencyPct').value = 10;
+
+                // Reset data
+                data.renovationItems = [
+                    { id: 1, category: 'Flooring', materials: [{ name: 'Materials', cost: 0 }], labor: 0 }
+                ];
+                data.financingSources = [
+                    { id: 1, name: 'Senior Mortgage', type: 'ltv', ltvPct: 75, fixedAmount: 0, interestRate: 7.5, originationPct: 1, enabled: true }
+                ];
+                data.currentProjectId = null;
+                document.getElementById('saveStatus').textContent = '';
+
+                closeProjectModal();
+                calculate();
+            }
+        }
+
+        // Initialize
+        calculate();
+    </script>
+
+    <!-- Load Supabase UMD and attach cloud helpers after page scripts to avoid initialization errors -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+    (function() {
+        const SUPABASE_URL = 'https://fmbjhbbaltdsbrvbotip.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtYmpoYmJhbHRkc2JydmJvdGlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MzY1MTAsImV4cCI6MjA3NzAxMjUxMH0.rQyj_WkoLj0JGMeSfx2o4xBLuNQQOA8e9sYTmITmOpk';
+
+        function createSupabaseClient() {
+            if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
+                console.warn('Supabase library not available; cloud functions disabled.');
+                return null;
+            }
+            try {
+                return window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            } catch (e) {
+                console.error('Failed to create Supabase client', e);
+                return null;
+            }
+        }
+
+        const client = createSupabaseClient();
+        if (!client) {
+            // define no-op functions so buttons won't throw
+            window.supabaseSaveCurrentProject = async function() { alert('Cloud save not available (Supabase client failed to load).'); };
+            window.supabaseLoadProjects = async function() { alert('Cloud load not available (Supabase client failed to load).'); };
+            return;
+        }
+
+        // attach helpers
+        window.supabaseSaveCurrentProject = async function() {
+            try {
+                const projectId = data.currentProjectId || 'project_' + Date.now();
+                const projectData = {
+                    id: projectId,
+                    name: document.getElementById('projectName').value,
+                    savedAt: new Date().toISOString(),
+                    inputs: {
+                        projectName: document.getElementById('projectName').value,
+                        purchasePrice: parseFloat(document.getElementById('purchasePrice').value),
+                        arvPrice: parseFloat(document.getElementById('arvPrice').value),
+                        holdPeriodWeeks: parseFloat(document.getElementById('holdPeriodWeeks').value),
+                        purchaseClosingCosts: parseFloat(document.getElementById('purchaseClosingCosts').value),
+                        saleClosingCostsPct: parseFloat(document.getElementById('saleClosingCostsPct').value),
+                        propertyTaxesAnnual: parseFloat(document.getElementById('propertyTaxesAnnual').value),
+                        insuranceAnnual: parseFloat(document.getElementById('insuranceAnnual').value),
+                        utilitiesMonthly: parseFloat(document.getElementById('utilitiesMonthly').value),
+                        hoaMonthly: parseFloat(document.getElementById('hoaMonthly').value),
+                        contingencyPct: parseFloat(document.getElementById('contingencyPct').value)
+                    },
+                    renovationItems: data.renovationItems,
+                    financingSources: data.financingSources
+                };
+
+                const payload = {
+                    id: projectData.id,
+                    name: projectData.name,
+                    savedAt: projectData.savedAt,
+                    data: projectData
+                };
+
+                const { error } = await client.from('projects').upsert(payload, { onConflict: 'id' });
+                if (error) throw error;
+
+                let projects = JSON.parse(localStorage.getItem('houseFlipProjects') || '[]');
+                const idx = projects.findIndex(p => p.id === projectData.id);
+                if (idx >= 0) projects[idx] = projectData; else projects.push(projectData);
+                localStorage.setItem('houseFlipProjects', JSON.stringify(projects));
+                data.currentProjectId = projectData.id;
+
+                document.getElementById('saveStatus').textContent = '● Saved (Cloud)';
+                document.getElementById('saveStatus').style.color = '#10b981';
+                loadProjectList();
+                alert('Project saved to Supabase successfully.');
+            } catch (err) {
+                console.error(err);
+                alert('Cloud save failed: ' + (err.message || JSON.stringify(err)));
+            }
+        };
+
+        window.supabaseLoadProjects = async function() {
+            try {
+                const { data: rows, error } = await client.from('projects').select('data').order('savedAt', { ascending: false }).limit(100);
+                if (error) throw error;
+                const projects = (rows || []).map(r => r.data);
+                if (projects.length === 0) {
+                    alert('No projects found in Supabase.');
+                    return;
+                }
+                localStorage.setItem('houseFlipProjects', JSON.stringify(projects));
+                loadProjectList();
+                alert('Loaded ' + projects.length + ' project(s) from Supabase. Open Projects modal to load one.');
+            } catch (err) {
+                console.error(err);
+                alert('Cloud load failed: ' + (err.message || JSON.stringify(err)));
+            }
+        };
+    })();
+    </script>
+</body>
+</html>
