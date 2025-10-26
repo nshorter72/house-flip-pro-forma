@@ -646,7 +646,7 @@
                 item.materials.forEach(m => baseRenovation += m.cost);
                 baseRenovation += item.labor;
             });
-            const contingencyAmt = baseRenovation * (inputs.contingency / 100);
+            const contingencyAmt = baseRenovation * (inputs.contingencyPct / 100);
             const totalRenovation = baseRenovation + contingencyAmt;
 
             // Calculate holding costs
@@ -674,15 +674,16 @@
             const totalCosts = inputs.purchasePrice + inputs.purchaseClosingCosts + totalRenovation + totalHolding + totalFinancingCosts;
 
             // Sale proceeds
-            const saleClosingCosts = inputs.arvPrice * (inputs.saleClosingPct / 100);
+            const saleClosingCosts = inputs.arvPrice * (inputs.saleClosingCostsPct / 100);
             const netSaleProceeds = inputs.arvPrice - saleClosingCosts;
 
             // Profit and returns
             const netProfit = netSaleProceeds - totalCosts;
             const totalEquity = totalCosts - totalLoanAmount;
-            const roi = (netProfit / totalEquity) * 100;
+            // Guard against division by zero / invalid numbers
+            const roi = (totalEquity !== 0 && isFinite(totalEquity)) ? (netProfit / totalEquity) * 100 : 0;
             const years = holdMonths / 12;
-            const irr = ((Math.pow(1 + (roi / 100), 1 / years) - 1) * 100);
+            const irr = (years > 0 && isFinite(roi)) ? ((Math.pow(1 + (roi / 100), 1 / years) - 1) * 100) : 0;
 
             // Update dashboard
             document.getElementById('netProfit').textContent = fmt(netProfit);
@@ -708,12 +709,26 @@
         }
 
         // Switch tabs
-        function switchTab(tab) {
+        function switchTab(tab, evt) {
+            // remove active from all tab buttons
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+            // prefer explicit event target if provided
+            if (evt && evt.currentTarget) {
+                evt.currentTarget.classList.add('active');
+            } else if (typeof event !== 'undefined' && event && event.target) {
+                // inline handlers sometimes expose global `event`
+                event.target.classList.add('active');
+            } else {
+                // fallback: try to find the button by its onclick attribute
+                const btn = Array.from(document.querySelectorAll('.tab')).find(b => {
+                    return b.getAttribute('onclick') && b.getAttribute('onclick').includes(`switchTab('${tab}')`);
+                });
+                if (btn) btn.classList.add('active');
+            }
             
             document.querySelectorAll('.content').forEach(c => c.style.display = 'none');
-            document.getElementById(tab).style.display = 'block';
+            const dest = document.getElementById(tab);
+            if (dest) dest.style.display = 'block';
             
             if (tab === 'renovation') renderRenovation();
             if (tab === 'financing') renderFinancing();
@@ -722,16 +737,19 @@
         // Renovation rendering
         function renderRenovation() {
             const tabsDiv = document.getElementById('renovationTabs');
-            tabsDiv.innerHTML = '<button class="renovation-tab active" onclick="showRenovationTab(\'summary\')">Summary</button>';
+            tabsDiv.innerHTML = '<button class="renovation-tab active" data-renovation-id="summary" onclick="showRenovationTab(\'summary\')">Summary</button>';
             data.renovationItems.forEach(item => {
-                tabsDiv.innerHTML += `<button class="renovation-tab" onclick="showRenovationTab(${item.id})">${item.category}</button>`;
+                tabsDiv.innerHTML += `<button class="renovation-tab" data-renovation-id="${item.id}" onclick="showRenovationTab(${item.id})">${item.category}</button>`;
             });
             showRenovationTab('summary');
         }
 
         function showRenovationTab(id) {
+            // clear active
             document.querySelectorAll('.renovation-tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+            // mark the correct tab active (lookup by data attribute)
+            const activeBtn = document.querySelector(`.renovation-tab[data-renovation-id="${id}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
             
             const contentDiv = document.getElementById('renovationContent');
             
@@ -752,8 +770,10 @@
                     html += `<div class="material-item">
                         <input type="text" value="${mat.name}" onchange="updateMaterial(${id}, ${idx}, 'name', this.value)">
                         <input type="number" value="${mat.cost}" onchange="updateMaterial(${id}, ${idx}, 'cost', this.value)">
+                        <button class="btn-danger" onclick="removeMaterialFromItem(${id}, ${idx})">Remove</button>
                     </div>`;
                 });
+                html += `<div style="margin-top:10px;"><button class="btn-success" onclick="addMaterialToItem(${id})">Add Material</button></div>`;
                 html += `<h4 style="margin: 20px 0 10px 0;">Labor</h4>`;
                 html += `<input type="number" value="${item.labor}" onchange="updateLabor(${id}, this.value)" style="width: 200px; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">`;
                 contentDiv.innerHTML = html;
@@ -773,6 +793,27 @@
         function updateLabor(itemId, value) {
             const item = data.renovationItems.find(i => i.id === itemId);
             item.labor = parseFloat(value) || 0;
+            calculate();
+        }
+
+        function addMaterialToItem(itemId) {
+            const item = data.renovationItems.find(i => i.id === itemId);
+            if (!item) return;
+            item.materials.push({ name: 'New Material', cost: 0 });
+            // if currently viewing this item's tab, re-render it
+            try { showRenovationTab(itemId); } catch (e) {}
+            calculate();
+        }
+
+        function removeMaterialFromItem(itemId, matIdx) {
+            const item = data.renovationItems.find(i => i.id === itemId);
+            if (!item) return;
+            if (item.materials.length <= 1) {
+                alert('At least one material is required.');
+                return;
+            }
+            item.materials.splice(matIdx, 1);
+            try { showRenovationTab(itemId); } catch (e) {}
             calculate();
         }
 
@@ -1063,14 +1104,14 @@
                         projectName: document.getElementById('projectName').value,
                         purchasePrice: parseFloat(document.getElementById('purchasePrice').value),
                         arvPrice: parseFloat(document.getElementById('arvPrice').value),
-                        holdPeriod: parseFloat(document.getElementById('holdPeriod').value),
-                        closingCosts: parseFloat(document.getElementById('closingCosts').value),
-                        saleClosingPct: parseFloat(document.getElementById('saleClosingPct').value),
-                        propertyTaxes: parseFloat(document.getElementById('propertyTaxes').value),
-                        insurance: parseFloat(document.getElementById('insurance').value),
-                        utilities: parseFloat(document.getElementById('utilities').value),
-                        hoa: parseFloat(document.getElementById('hoa').value),
-                        contingency: parseFloat(document.getElementById('contingency').value)
+                        holdPeriodWeeks: parseFloat(document.getElementById('holdPeriodWeeks').value),
+                        purchaseClosingCosts: parseFloat(document.getElementById('purchaseClosingCosts').value),
+                        saleClosingCostsPct: parseFloat(document.getElementById('saleClosingCostsPct').value),
+                        propertyTaxesAnnual: parseFloat(document.getElementById('propertyTaxesAnnual').value),
+                        insuranceAnnual: parseFloat(document.getElementById('insuranceAnnual').value),
+                        utilitiesMonthly: parseFloat(document.getElementById('utilitiesMonthly').value),
+                        hoaMonthly: parseFloat(document.getElementById('hoaMonthly').value),
+                        contingencyPct: parseFloat(document.getElementById('contingencyPct').value)
                     },
                     renovationItems: data.renovationItems,
                     financingSources: data.financingSources
