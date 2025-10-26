@@ -513,15 +513,15 @@
                     </div>
                     <div class="form-group">
                         <label>Hold Period (Weeks)</label>
-                        <input type="number" id="holdPeriod" value="36" onchange="calculate()">
+                        <input type="number" id="holdPeriodWeeks" value="36" onchange="calculate()">
                     </div>
                     <div class="form-group">
                         <label>Purchase Closing Costs ($)</label>
-                        <input type="number" id="closingCosts" value="4329" onchange="calculate()">
+                        <input type="number" id="purchaseClosingCosts" value="4329" onchange="calculate()">
                     </div>
                     <div class="form-group">
                         <label>Sale Closing Costs (%)</label>
-                        <input type="number" step="0.1" id="saleClosingPct" value="6" onchange="calculate()">
+                        <input type="number" step="0.1" id="saleClosingCostsPct" value="6" onchange="calculate()">
                     </div>
                 </div>
 
@@ -529,23 +529,23 @@
                     <h3>Holding Costs</h3>
                     <div class="form-group">
                         <label>Property Taxes (Annual $)</label>
-                        <input type="number" id="propertyTaxes" value="4500" onchange="calculate()">
+                        <input type="number" id="propertyTaxesAnnual" value="4500" onchange="calculate()">
                     </div>
                     <div class="form-group">
                         <label>Insurance (Annual $)</label>
-                        <input type="number" id="insurance" value="4500" onchange="calculate()">
+                        <input type="number" id="insuranceAnnual" value="4500" onchange="calculate()">
                     </div>
                     <div class="form-group">
                         <label>Utilities (Monthly $)</label>
-                        <input type="number" id="utilities" value="200" onchange="calculate()">
+                        <input type="number" id="utilitiesMonthly" value="200" onchange="calculate()">
                     </div>
                     <div class="form-group">
                         <label>HOA (Monthly $)</label>
-                        <input type="number" id="hoa" value="0" onchange="calculate()">
+                        <input type="number" id="hoaMonthly" value="0" onchange="calculate()">
                     </div>
                     <div class="form-group">
                         <label>Contingency (%)</label>
-                        <input type="number" id="contingency" value="10" onchange="calculate()">
+                        <input type="number" id="contingencyPct" value="10" onchange="calculate()">
                     </div>
                 </div>
             </div>
@@ -630,14 +630,14 @@
             const inputs = {
                 purchasePrice: parseFloat(document.getElementById('purchasePrice').value) || 0,
                 arvPrice: parseFloat(document.getElementById('arvPrice').value) || 0,
-                holdPeriod: parseFloat(document.getElementById('holdPeriod').value) || 0,
-                closingCosts: parseFloat(document.getElementById('closingCosts').value) || 0,
-                saleClosingPct: parseFloat(document.getElementById('saleClosingPct').value) || 0,
-                propertyTaxes: parseFloat(document.getElementById('propertyTaxes').value) || 0,
-                insurance: parseFloat(document.getElementById('insurance').value) || 0,
-                utilities: parseFloat(document.getElementById('utilities').value) || 0,
-                hoa: parseFloat(document.getElementById('hoa').value) || 0,
-                contingency: parseFloat(document.getElementById('contingency').value) || 0
+                holdPeriodWeeks: parseFloat(document.getElementById('holdPeriodWeeks').value) || 0,
+                purchaseClosingCosts: parseFloat(document.getElementById('purchaseClosingCosts').value) || 0,
+                saleClosingCostsPct: parseFloat(document.getElementById('saleClosingCostsPct').value) || 0,
+                propertyTaxesAnnual: parseFloat(document.getElementById('propertyTaxesAnnual').value) || 0,
+                insuranceAnnual: parseFloat(document.getElementById('insuranceAnnual').value) || 0,
+                utilitiesMonthly: parseFloat(document.getElementById('utilitiesMonthly').value) || 0,
+                hoaMonthly: parseFloat(document.getElementById('hoaMonthly').value) || 0,
+                contingencyPct: parseFloat(document.getElementById('contingencyPct').value) || 0
             };
 
             // Calculate renovation
@@ -650,11 +650,11 @@
             const totalRenovation = baseRenovation + contingencyAmt;
 
             // Calculate holding costs
-            const holdMonths = inputs.holdPeriod / 4.33;
-            const propertyTaxesCost = (inputs.propertyTaxes / 12) * holdMonths;
-            const insuranceCost = (inputs.insurance / 12) * holdMonths;
-            const utilitiesCost = inputs.utilities * holdMonths;
-            const hoaCost = inputs.hoa * holdMonths;
+            const holdMonths = inputs.holdPeriodWeeks / 4.33;
+            const propertyTaxesCost = (inputs.propertyTaxesAnnual / 12) * holdMonths;
+            const insuranceCost = (inputs.insuranceAnnual / 12) * holdMonths;
+            const utilitiesCost = inputs.utilitiesMonthly * holdMonths;
+            const hoaCost = inputs.hoaMonthly * holdMonths;
             const totalHolding = propertyTaxesCost + insuranceCost + utilitiesCost + hoaCost;
 
             // Calculate financing
@@ -671,7 +671,7 @@
             });
 
             // Total costs
-            const totalCosts = inputs.purchasePrice + inputs.closingCosts + totalRenovation + totalHolding + totalFinancingCosts;
+            const totalCosts = inputs.purchasePrice + inputs.purchaseClosingCosts + totalRenovation + totalHolding + totalFinancingCosts;
 
             // Sale proceeds
             const saleClosingCosts = inputs.arvPrice * (inputs.saleClosingPct / 100);
@@ -689,7 +689,7 @@
             document.getElementById('roiPercent').textContent = roi.toFixed(1) + '% ROI';
             document.getElementById('irrPercent').textContent = irr.toFixed(1) + '%';
             document.getElementById('totalEquity').textContent = fmt(totalEquity);
-            document.getElementById('timelineWeeks').textContent = inputs.holdPeriod;
+            document.getElementById('timelineWeeks').textContent = inputs.holdPeriodWeeks;
             document.getElementById('timelineMonths').textContent = holdMonths.toFixed(1) + ' months';
 
             // Update summary
@@ -903,26 +903,26 @@
 
         function saveCurrentProject() {
             const projectId = data.currentProjectId || 'project_' + Date.now();
-            const projectData = {
-                id: projectId,
-                name: document.getElementById('projectName').value,
-                savedAt: new Date().toISOString(),
-                inputs: {
-                    projectName: document.getElementById('projectName').value,
-                    purchasePrice: parseFloat(document.getElementById('purchasePrice').value),
-                    arvPrice: parseFloat(document.getElementById('arvPrice').value),
-                    holdPeriod: parseFloat(document.getElementById('holdPeriod').value),
-                    closingCosts: parseFloat(document.getElementById('closingCosts').value),
-                    saleClosingPct: parseFloat(document.getElementById('saleClosingPct').value),
-                    propertyTaxes: parseFloat(document.getElementById('propertyTaxes').value),
-                    insurance: parseFloat(document.getElementById('insurance').value),
-                    utilities: parseFloat(document.getElementById('utilities').value),
-                    hoa: parseFloat(document.getElementById('hoa').value),
-                    contingency: parseFloat(document.getElementById('contingency').value)
-                },
-                renovationItems: data.renovationItems,
-                financingSources: data.financingSources
-            };
+                const projectData = {
+                    id: projectId,
+                    name: document.getElementById('projectName').value,
+                    savedAt: new Date().toISOString(),
+                    inputs: {
+                        projectName: document.getElementById('projectName').value,
+                        purchasePrice: parseFloat(document.getElementById('purchasePrice').value),
+                        arvPrice: parseFloat(document.getElementById('arvPrice').value),
+                        holdPeriodWeeks: parseFloat(document.getElementById('holdPeriodWeeks').value),
+                        purchaseClosingCosts: parseFloat(document.getElementById('purchaseClosingCosts').value),
+                        saleClosingCostsPct: parseFloat(document.getElementById('saleClosingCostsPct').value),
+                        propertyTaxesAnnual: parseFloat(document.getElementById('propertyTaxesAnnual').value),
+                        insuranceAnnual: parseFloat(document.getElementById('insuranceAnnual').value),
+                        utilitiesMonthly: parseFloat(document.getElementById('utilitiesMonthly').value),
+                        hoaMonthly: parseFloat(document.getElementById('hoaMonthly').value),
+                        contingencyPct: parseFloat(document.getElementById('contingencyPct').value)
+                    },
+                    renovationItems: data.renovationItems,
+                    financingSources: data.financingSources
+                };
 
             let projects = JSON.parse(localStorage.getItem('houseFlipProjects') || '[]');
             const existingIndex = projects.findIndex(p => p.id === projectId);
@@ -949,17 +949,17 @@
             if (!project) return;
 
             // Load inputs
-            document.getElementById('projectName').value = project.inputs.projectName;
-            document.getElementById('purchasePrice').value = project.inputs.purchasePrice;
-            document.getElementById('arvPrice').value = project.inputs.arvPrice;
-            document.getElementById('holdPeriod').value = project.inputs.holdPeriod;
-            document.getElementById('closingCosts').value = project.inputs.closingCosts;
-            document.getElementById('saleClosingPct').value = project.inputs.saleClosingPct;
-            document.getElementById('propertyTaxes').value = project.inputs.propertyTaxes;
-            document.getElementById('insurance').value = project.inputs.insurance;
-            document.getElementById('utilities').value = project.inputs.utilities;
-            document.getElementById('hoa').value = project.inputs.hoa;
-            document.getElementById('contingency').value = project.inputs.contingency;
+                document.getElementById('projectName').value = project.inputs.projectName;
+                document.getElementById('purchasePrice').value = project.inputs.purchasePrice;
+                document.getElementById('arvPrice').value = project.inputs.arvPrice;
+                document.getElementById('holdPeriodWeeks').value = project.inputs.holdPeriodWeeks;
+                document.getElementById('purchaseClosingCosts').value = project.inputs.purchaseClosingCosts;
+                document.getElementById('saleClosingCostsPct').value = project.inputs.saleClosingCostsPct;
+                document.getElementById('propertyTaxesAnnual').value = project.inputs.propertyTaxesAnnual;
+                document.getElementById('insuranceAnnual').value = project.inputs.insuranceAnnual;
+                document.getElementById('utilitiesMonthly').value = project.inputs.utilitiesMonthly;
+                document.getElementById('hoaMonthly').value = project.inputs.hoaMonthly;
+                document.getElementById('contingencyPct').value = project.inputs.contingencyPct;
 
             // Load other data
             data.renovationItems = project.renovationItems;
@@ -995,14 +995,14 @@
                 document.getElementById('projectName').value = 'New Project';
                 document.getElementById('purchasePrice').value = 0;
                 document.getElementById('arvPrice').value = 0;
-                document.getElementById('holdPeriod').value = 36;
-                document.getElementById('closingCosts').value = 0;
-                document.getElementById('saleClosingPct').value = 6;
-                document.getElementById('propertyTaxes').value = 0;
-                document.getElementById('insurance').value = 0;
-                document.getElementById('utilities').value = 0;
-                document.getElementById('hoa').value = 0;
-                document.getElementById('contingency').value = 10;
+                document.getElementById('holdPeriodWeeks').value = 36;
+                document.getElementById('purchaseClosingCosts').value = 0;
+                document.getElementById('saleClosingCostsPct').value = 6;
+                document.getElementById('propertyTaxesAnnual').value = 0;
+                document.getElementById('insuranceAnnual').value = 0;
+                document.getElementById('utilitiesMonthly').value = 0;
+                document.getElementById('hoaMonthly').value = 0;
+                document.getElementById('contingencyPct').value = 10;
 
                 // Reset data
                 data.renovationItems = [
