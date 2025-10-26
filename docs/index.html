@@ -933,19 +933,45 @@
             listDiv.innerHTML = '';
             projects.forEach(project => {
                 const current = project.id === data.currentProjectId ? 'current' : '';
-                listDiv.innerHTML += `
-                    <div class="project-item ${current}">
-                        <div class="project-info">
-                            <h4>${project.name}</h4>
-                            <p>Purchase: ${fmt(project.inputs.purchasePrice)} | ARV: ${fmt(project.inputs.arvPrice)}</p>
-                            <p style="font-size: 12px; color: #9ca3af;">Saved: ${new Date(project.savedAt).toLocaleString()}</p>
-                        </div>
-                        <div class="project-actions">
-                            <button class="btn-primary" onclick="loadProject('${project.id}')">Load</button>
-                            <button class="btn-danger" onclick="deleteProject('${project.id}')">Delete</button>
-                        </div>
-                    </div>
-                `;
+                // build DOM nodes instead of using template backticks to avoid parsing issues
+                const item = document.createElement('div');
+                item.className = 'project-item ' + current;
+
+                const info = document.createElement('div');
+                info.className = 'project-info';
+                const title = document.createElement('h4');
+                title.textContent = project.name;
+                const details = document.createElement('p');
+                details.textContent = 'Purchase: ' + fmt(project.inputs.purchasePrice) + ' | ARV: ' + fmt(project.inputs.arvPrice);
+                const saved = document.createElement('p');
+                saved.style.fontSize = '12px';
+                saved.style.color = '#9ca3af';
+                saved.textContent = 'Saved: ' + new Date(project.savedAt).toLocaleString();
+
+                info.appendChild(title);
+                info.appendChild(details);
+                info.appendChild(saved);
+
+                const actions = document.createElement('div');
+                actions.className = 'project-actions';
+
+                const loadBtn = document.createElement('button');
+                loadBtn.className = 'btn-primary';
+                loadBtn.textContent = 'Load';
+                loadBtn.addEventListener('click', function() { loadProject(project.id); });
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn-danger';
+                delBtn.textContent = 'Delete';
+                delBtn.addEventListener('click', function() { deleteProject(project.id); });
+
+                actions.appendChild(loadBtn);
+                actions.appendChild(delBtn);
+
+                item.appendChild(info);
+                item.appendChild(actions);
+
+                listDiv.appendChild(item);
             });
         }
 
