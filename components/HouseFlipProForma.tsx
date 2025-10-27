@@ -290,31 +290,25 @@ const HouseFlipProForma = () => {
     }));
   };
 
-  // Storage helpers that prefer window.storage but fall back to a single 'houseFlipProjects' array in localStorage
+  // Storage & cloud helpers
+  // - Local fallback uses localStorage
+  // - Cloud save/load go through Next.js API endpoints (/api/saveProject, /api/loadProjects)
   const storageSet = async (id: string, value: string) => {
-    if ((window as any).storage?.set) return (window as any).storage.set(id, value);
-
+    // local fallback
     const raw = localStorage.getItem('houseFlipProjects') || '[]';
     const projects = JSON.parse(raw);
     let projectObj;
     try {
       projectObj = JSON.parse(value);
     } catch {
-      // if value isn't JSON, wrap it
       projectObj = { id, value };
     }
     const idx = projects.findIndex((p: any) => p.id === id);
-    if (idx >= 0) {
-      projects[idx] = projectObj;
-    } else {
-      projects.push(projectObj);
-    }
+    if (idx >= 0) projects[idx] = projectObj; else projects.push(projectObj);
     localStorage.setItem('houseFlipProjects', JSON.stringify(projects));
   };
 
   const storageGet = async (id: string) => {
-    if ((window as any).storage?.get) return (window as any).storage.get(id);
-
     const raw = localStorage.getItem('houseFlipProjects') || '[]';
     const projects = JSON.parse(raw);
     const project = projects.find((p: any) => p.id === id);
@@ -322,7 +316,6 @@ const HouseFlipProForma = () => {
   };
 
   const storageList = async () => {
-    if ((window as any).storage?.list) return (window as any).storage.list('houseFlipProjects');
     const raw = localStorage.getItem('houseFlipProjects') || '[]';
     const projects = JSON.parse(raw);
     const keys = projects.map((p: any) => p.id);
@@ -330,33 +323,55 @@ const HouseFlipProForma = () => {
   };
 
   const storageRemove = async (id: string) => {
-    if ((window as any).storage?.remove) return (window as any).storage.remove(id);
-
     const raw = localStorage.getItem('houseFlipProjects') || '[]';
     let projects = JSON.parse(raw);
     projects = projects.filter((p: any) => p.id !== id);
     localStorage.setItem('houseFlipProjects', JSON.stringify(projects));
   };
 
+  const apiSaveProject = async (project: any) => {
+    try {
+      const res = await fetch('/api/saveProject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(project)
+      });
+      return await res.json();
+    } catch (err) {
+      console.error('apiSaveProject error', err);
+      return null;
+    }
+  };
+
+  const apiLoadProjects = async () => {
+    try {
+      const res = await fetch('/api/loadProjects');
+      if (!res.ok) return [];
+      const json = await res.json();
+      return json.projects || [];
+    } catch (err) {
+      console.error('apiLoadProjects error', err);
+      return [];
+    }
+  };
+
   const generateId = () => `project_${Date.now()}`;
 
   const refreshSavedProjects = async () => {
     try {
-      const result = await storageList();
-      const projects = [];
-      for (const key of result.keys) {
-        try {
-          const data = await storageGet(key);
-          if (data && data.value) {
-            projects.push(JSON.parse(data.value));
-          }
-        } catch (e) {
-          console.log('Error loading project:', key);
-        }
-      }
+      // preferred: load from cloud and merge with local
+      const cloud = await apiLoadProjects();
+      const raw = localStorage.getItem('houseFlipProjects') || '[]';
+      const local = JSON.parse(raw);
+      // Merge: cloud first, then local entries that are not present
+      const combinedMap: Record<string, any> = {};
+      (cloud || []).forEach((p: any) => { if (p && p.id) combinedMap[p.id] = p; });
+      (local || []).forEach((p: any) => { if (p && p.id && !combinedMap[p.id]) combinedMap[p.id] = p; });
+      const projects = Object.values(combinedMap);
       setSavedProjects(projects);
     } catch (e) {
-      console.log('No saved projects yet');
+      console.log('No saved projects yet', e);
+      setSavedProjects([]);
     }
   };
 
@@ -365,16 +380,25 @@ const HouseFlipProForma = () => {
       const id = currentProjectId || generateId();
       const project = {
         id,
-        projectName: inputs.projectName,
+        name: inputs.projectName,
         inputs,
         renovationItems,
         financingSources,
         savedAt: new Date().toISOString()
       };
+      // persist locally immediately
       await storageSet(id, JSON.stringify(project));
-      setCurrentProjectId(id);
-      await refreshSavedProjects();
-      alert('Project saved');
+      // persist to cloud (fire and await so user sees errors)
+      const cloudResp = await apiSaveProject(project);
+      if (cloudResp && cloudResp.ok) {
+        setCurrentProjectId(id);
+        await refreshSavedProjects();
+        alert('Project saved (local + cloud)');
+      } else {
+        setCurrentProjectId(id);
+        await refreshSavedProjects();
+        alert('Project saved locally; cloud save failed or unavailable');
+      }
     } catch (e) {
       console.error(e);
       alert('Save failed');
@@ -387,16 +411,18 @@ const HouseFlipProForma = () => {
       const id = `project:${name.replace(/\s+/g,'-').toLowerCase()}:${Date.now()}`;
       const project = {
         id,
-        projectName: name,
+        name,
         inputs,
         renovationItems,
         financingSources,
         savedAt: new Date().toISOString()
       };
       await storageSet(id, JSON.stringify(project));
+      const cloudResp = await apiSaveProject(project);
       setCurrentProjectId(id);
       await refreshSavedProjects();
-      alert('Project saved as ' + name);
+      if (cloudResp && cloudResp.ok) alert('Project saved as ' + name + ' (local + cloud)');
+      else alert('Project saved as ' + name + ' (local only)');
     } catch (e) {
       console.error(e);
       alert('Save as failed');
@@ -405,6 +431,19 @@ const HouseFlipProForma = () => {
 
   const loadProject = async (id: string) => {
     try {
+      // prefer cloud-synced projects list if available
+      const cloudProjects = await apiLoadProjects();
+      const found = (cloudProjects || []).find((p: any) => p.id === id);
+      if (found) {
+        const project = found;
+        if (project.inputs) setInputs(project.inputs);
+        if (project.renovationItems) setRenovationItems(project.renovationItems);
+        if (project.financingSources) setFinancingSources(project.financingSources);
+        setCurrentProjectId(id);
+        return;
+      }
+
+      // fallback to local
       const data = await storageGet(id);
       if (data && data.value) {
         const project = JSON.parse(data.value);
@@ -412,9 +451,10 @@ const HouseFlipProForma = () => {
         if (project.renovationItems) setRenovationItems(project.renovationItems);
         if (project.financingSources) setFinancingSources(project.financingSources);
         setCurrentProjectId(id);
-      } else {
-        alert('Project not found');
+        return;
       }
+
+      alert('Project not found');
     } catch (e) {
       console.error(e);
       alert('Load failed');
@@ -423,7 +463,9 @@ const HouseFlipProForma = () => {
 
   const deleteProject = async (id: string) => {
     try {
+      // remove locally
       await storageRemove(id);
+      // Note: server-side delete endpoint not implemented; implement later if needed
       await refreshSavedProjects();
       setCurrentProjectId(null);
       alert('Deleted');
